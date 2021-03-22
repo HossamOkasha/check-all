@@ -1,0 +1,5 @@
+# Venv
+venv/
+
+.vscode
+__pycache__
