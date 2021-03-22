@@ -123,8 +123,10 @@ def create_app(test_config=None):
   def update_todo_completed(todo_id):
     error = False
     todo = Todo.query.get_or_404(todo_id)
+    complete = request.get_json().get('complete')
+    if complete is None:
+      abort(400, 'complete expected in req body')
     try:
-      complete = request.get_json()['complete']
       todo.complete = bool(complete)
       todo.update()
     except:
@@ -167,27 +169,30 @@ def create_app(test_config=None):
   # CHECK ALL TODOS
   @app.route('/lists/<int:list_id>', methods=['PATCH'])
   def set_completed_list(list_id):
-      error = False
+    error = False
+    selected_list = TodoList.query.get_or_404(list_id)
+    complete_value = request.get_json().get('complete')
+    if complete_value is None:
+      abort(400, 'complete expected in req body')
+    
+    try:
+      for todo in selected_list.todos:
+        todo.complete = complete_value
+      selected_list.update()
+    except:
+      db.session.rollback()
 
-      selected_list = TodoList.query.get_or_404(list_id)
-      try:
-          complete_value = request.get_json()['complete']
+      error = True
+    finally:
+      db.session.close()
 
-          for todo in selected_list.todos:
-              todo.complete = complete_value
-
-          selected_list.update()
-      except:
-          db.session.rollback()
-
-          error = True
-      finally:
-          db.session.close()
-
-      if error:
-          abort(500)
-      else:
-          return '', 200
+    if error:
+      abort(500)
+    else:
+      return jsonify({
+        "success": True,
+        "listId": list_id
+      })
   return app
 
 
