@@ -1,6 +1,8 @@
 from os import environ
 from sqlalchemy import Column, String, Integer, ForeignKey, Boolean
 from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
+
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -11,7 +13,7 @@ setup_db(app)
 '''
 
 
-def setup_db(app, database_path=None):
+def setup_db(app, database_path=None, test=False):
   if database_path:
     app.config["SQLALCHEMY_DATABASE_URI"] = database_path
   else:
@@ -25,7 +27,10 @@ def setup_db(app, database_path=None):
   db.app = app
   db.init_app(app)
 
-  db.create_all()
+  if test:
+    db.create_all()
+  else:
+    migrate = Migrate(app, db)
 
 
 
