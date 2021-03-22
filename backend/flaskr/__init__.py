@@ -78,6 +78,116 @@ def create_app(test_config=None):
         "total_lists": len(TodoList.query.all())
       })       
 
+
+  '''
+  GET POST PATCH DELETE >>todos<<
+  '''
+
+  # GET TODOS FROM LIST
+  @app.route('/lists/<int:list_id>/todos')
+  def get_todos_from_list(list_id):
+    current_list = TodoList.query.get_or_404(list_id)
+    todos = current_list.todos
+
+    formated_todo = [todo.format() for todo in todos]
+    formated_list = current_list.format()
+    return jsonify({"success": True, "currentTodos": formated_todo, "currentList": formated_list})
+
+  # POST TODOS
+  @app.route('/lists/<int:list_id>/todos', methods=['POST'])
+  def create_todo(list_id):
+    error = False
+    todo = request.get_json()
+    if not todo.get('description'):
+      abort(400, 'description expected in req body')
+    try:
+      new_todo = Todo(description=todo["description"], list_id=list_id)
+      new_todo.insert()
+    except:
+      db.session.rollback()
+      error = True
+    finally:
+      if not error:
+        body = new_todo.format()
+      db.session.close()
+    if error:
+      abort(422)
+    else:
+      return jsonify({
+        'success': True,
+        'created': body
+      })
+
+  # UPDATE A Todo
+  @app.route('/todos/<int:todo_id>', methods=["PATCH"])
+  def update_todo_completed(todo_id):
+    error = False
+    todo = Todo.query.get_or_404(todo_id)
+    try:
+      complete = request.get_json()['complete']
+      todo.complete = bool(complete)
+      todo.update()
+    except:
+      db.session.rollback()
+      error = True
+    finally:
+      db.session.close()
+
+    if error:
+      abort(400)
+
+    else:
+      return jsonify({
+        "success": True,
+        "todoId": todo_id
+      })
+
+  # DELETE a ToDo
+  @app.route("/todos/<int:todo_id>", methods=["DELETE"])
+  def delete_todo(todo_id):
+    error = False
+    todo = Todo.query.get_or_404(todo_id)
+    try:
+      todo.delete()
+    except:
+      db.session.rollback()
+      error = True
+
+    finally:
+      db.session.close()
+    if error:
+      abort(422)
+    else:
+      return jsonify({
+        "success": True,
+        "deleted": todo_id,
+        "total_todos": len(Todo.query.all())
+      })
+
+  # CHECK ALL TODOS
+  @app.route('/lists/<int:list_id>', methods=['PATCH'])
+  def set_completed_list(list_id):
+      error = False
+
+      selected_list = TodoList.query.get_or_404(list_id)
+      try:
+          complete_value = request.get_json()['complete']
+
+          for todo in selected_list.todos:
+              todo.complete = complete_value
+
+          selected_list.update()
+      except:
+          db.session.rollback()
+
+          error = True
+      finally:
+          db.session.close()
+
+      if error:
+          abort(500)
+      else:
+          return '', 200
   return app
 
 
