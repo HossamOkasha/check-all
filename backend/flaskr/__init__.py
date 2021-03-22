@@ -29,7 +29,8 @@ def create_app(test_config=None):
     return jsonify({
       "success": True,
       "lists": formated_lists,
-      "allTodos": formated_todos
+      "allTodos": formated_todos,
+      "totalLists": len(TodoList.query.all())
     })     
 
   # CREATE LISTS
@@ -54,7 +55,8 @@ def create_app(test_config=None):
     else:
       return jsonify({
         'success': True,
-        "created": body
+        "created": body,
+        "totalLists": len(TodoList.query.all())
       })
 
   # DELETE A LIST
@@ -195,7 +197,7 @@ def create_app(test_config=None):
       })
   
   # ERROR HANDLERS
-  
+
   # 404 NOT FOUND
   @app.errorhandler(404)
   def not_found(error):
