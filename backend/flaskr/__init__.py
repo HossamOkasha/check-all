@@ -1,12 +1,12 @@
 from flask import Flask, jsonify, request, abort
-
+from flask_cors import CORS
 from flaskr.db import setup_db, db, Todo, TodoList
-
 
 def create_app(test_config=None):
   # Create and Config the app
   app = Flask(__name__)
   setup_db(app)
+  CORS(app)
 
   # Root
   @app.route('/')
@@ -193,6 +193,45 @@ def create_app(test_config=None):
         "success": True,
         "listId": list_id
       })
+  
+  # ERROR HANDLERS
+  
+  # 404 NOT FOUND
+  @app.errorhandler(404)
+  def not_found(error):
+    return jsonify({
+      'success': False,
+      'error': 404,
+      'message': 'Not Found!'
+    }), 404
+
+  # 405 NOT ALLOWED
+  @app.errorhandler(405)
+  def not_alllowed(error):
+    return jsonify({
+      'success': False,
+      'error': 405,
+      'message': 'Method Not Allowed!'
+    }), 405
+
+  # 400 BAD REQUEST
+  @app.errorhandler(400)
+  def bad_request(error):
+    return jsonify({
+      'success': False,
+      'error': 400,
+      'message': 'bad request!'
+    }), 400
+
+  # 422 UNPROCESSABLE
+  @app.errorhandler(422)
+  def unprocessable(error):
+    return jsonify({
+      'success': False,
+      'error': 422,
+      'message': 'unprocessable'
+    }), 422    
+  
   return app
 
 
