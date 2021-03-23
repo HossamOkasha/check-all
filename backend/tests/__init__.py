@@ -29,7 +29,7 @@ class checkAllTestCase(unittest.TestCase):
 
   def test_add_new_todo(self):
     res = self.client().post(
-      '/lists/15/todos', headers=self.headersConf,
+      '/lists/25/todos', headers=self.headersConf,
       json=self.new_todo)
     data = json.loads(res.data)
     self.assertEqual(res.status_code, 200)
@@ -45,6 +45,23 @@ class checkAllTestCase(unittest.TestCase):
     self.assertTrue(data['totalLists'])
     self.assertTrue(data['allTodos'])
 
+  def test_404_get_no_existing_endpoint(self):
+    res = self.client().get('/listssss', headers=self.headersConf)
+    data = json.loads(res.data)
+
+    self.assertEqual(res.status_code, 404)
+    self.assertEqual(data['success'], False)
+    self.assertEqual(data['message'], 'Not Found!')  
+
+  def test_get_todos_from_list(self):
+    res = self.client().get('/lists/25/todos', headers=self.headersConf)
+    data = json.loads(res.data)
+
+    self.assertEqual(res.status_code, 200)
+    self.assertTrue(data['success'])
+    self.assertTrue(data['currentTodos'])
+    self.assertTrue(data['currentList'])
+
   def test_404_get_todos_from_list(self):
     res = self.client().get('/lists/1000/todos', headers=self.headersConf)
     data = json.loads(res.data)
@@ -52,3 +69,6 @@ class checkAllTestCase(unittest.TestCase):
     self.assertEqual(res.status_code, 404)
     self.assertEqual(data['success'], False)
     self.assertEqual(data['message'], 'Not Found!')
+
+   
+  
